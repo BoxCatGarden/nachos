@@ -35,4 +35,4 @@
 build.cygwin/
 build.macosx/
 .vscode/
-
+build.linux/*.s
