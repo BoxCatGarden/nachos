@@ -31,7 +31,7 @@
 
 Scheduler::Scheduler()
 { 
-    readyList = new SortedList<Thread *>(Thread::Prior); 
+    readyList = new List<Thread *>;
     toBeDestroyed = NULL;
 } 
 
@@ -59,6 +59,8 @@ Scheduler::ReadyToRun (Thread *thread)
     ASSERT(kernel->interrupt->getLevel() == IntOff);
     DEBUG(dbgThread, "Putting thread on ready list: " << thread->getName());
 
+    thread->waitTick = lastSchedulingTick - kernel->stats->totalTicks; //reset waitTick
+
     thread->setStatus(READY);
     readyList->Append(thread);
 }
@@ -76,14 +78,59 @@ Scheduler::FindNextToRun()
 {
     ASSERT(kernel->interrupt->getLevel() == IntOff);
 
-    if (readyList->IsEmpty() || Thread::Prior(kernel->currentThread, readyList->Front()) < 0)
+    if (readyList->IsEmpty())
     {
         return NULL;
     }
-    else
-    {
-        return readyList->RemoveFront();
+    lastDuration = kernel->stats->totalTicks - lastSchedulingTick;
+    lastSchedulingTick = kernel->stats->totalTicks;
+
+    kernel->currentThread->runTick += lastDuration; //add running ticks
+    
+    Thread* candidate = CalculateMaxWeightThread();
+    if (candidate->weight > CalculateWeight(kernel->currentThread))
+    { //
+        readyList->Remove(candidate);
+        return candidate;
     }
+    return NULL;
+}
+
+/*-------------------------------------------------------------
+ * Calculate and set the weight of every threads in ready list.
+ * Return the one with maximum weight.
+ * 
+ * Note: waitTick of any threads in readyList will add a
+ * duration.
+-------------------------------------------------------------*/
+Thread *Scheduler::CalculateMaxWeightThread()
+{
+    int max = -1, k;
+    Thread *maxThread, *kThread;
+    ListIterator<Thread *> i(readyList);
+    while (!i.IsDone())
+    {
+        kThread = i.Item(); i.Next();
+        kThread->waitTick += lastDuration; //add waiting ticks
+        k = CalculateWeight(kThread);
+        if (k > max)
+        {
+            max = k;
+            maxThread = kThread;
+        }
+    }
+    return maxThread;
+}
+
+/*-------------------------------------------------------------
+ * Calculate and set the weight of a thread.
+ * Return the weight.
+ * 
+ * Note: weight of thread t will refresh.
+-------------------------------------------------------------*/
+int Scheduler::CalculateWeight(Thread *t)
+{
+    return t->weight = (int)((t->waitTick + t->runTick) / (1.0 + t->runTick) * 100);
 }
 
 //----------------------------------------------------------------------

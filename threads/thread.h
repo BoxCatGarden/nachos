@@ -92,7 +92,7 @@ private:
   void *machineState[MachineStateSize]; // all registers except for stackTop
 
 public:
-  Thread(char *debugName, int threadPriority = 0); // initialize a Thread
+  Thread(char *debugName); // initialize a Thread
   ~Thread();                                       // deallocate a Thread
                                                    // NOTE -- thread being deleted
                                                    // must not be running when delete
@@ -141,26 +141,24 @@ public:
   AddrSpace *space; // User code this thread is running.
 
 private:
-  int priority; //the greater the priority, the more important the thread
   int id;       //also indicates the slot in the process table which contains it
 
   int FetchEmptyTableSlot(); //find an empty slot in the process table
                              //return -1 if the table is full
                              //or the index of the empty slot
                              //it will also put this thread into the table
-
   void OnFinish(); //it will be called in Finish()
 
 public:
-  static int Prior(Thread *a, Thread *b); //if a is prior to b,
-                                          //the return value will be less than 0.
+  int weight; //priority; the greater the weight, the more important the thread
+  int runTick; //the ticks for running
+  int waitTick; //the ticks for waiting in the ready list
 
+  int GetId() { return id; }
+  
   static Thread *processTable[ProcessTableSize];
   static int ThreadNum();        //calculate the total number of threads in the process table
   static bool IsValidId(int id); //check whether the id is valid
-
-  int GetId() { return id; }
-  int GetPriority() { return priority; }
 };
 
 #define MAILBOX_SIZE 32

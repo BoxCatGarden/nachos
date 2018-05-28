@@ -33,7 +33,7 @@ const int STACK_FENCEPOST = 0xdedbeef;
 //	"threadName" is an arbitrary string, useful for debugging.
 //----------------------------------------------------------------------
 
-Thread::Thread(char *threadName, int threadPriority)
+Thread::Thread(char *threadName)
 {
     name = threadName;
     stackTop = NULL;
@@ -47,7 +47,9 @@ Thread::Thread(char *threadName, int threadPriority)
     }
     space = NULL;
 
-    priority = threadPriority;
+    weight = 0;
+    runTick = 0;
+    waitTick = 0;
     IntStatus oldLevel = kernel->interrupt->SetLevel(IntOff);
     id = FetchEmptyTableSlot();
     kernel->interrupt->SetLevel(oldLevel);
@@ -493,10 +495,4 @@ int Thread::FetchEmptyTableSlot()
         }
     }
     return InvalidProessTableSlot;
-}
-
-//static
-int Thread::Prior(Thread *a, Thread *b)
-{
-    return a->status == BLOCKED ? 0 : b->priority - a->priority;
 }
