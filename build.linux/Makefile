@@ -220,6 +220,7 @@ PROGRAM = nachos
 #
 
 LIB_H = ../lib/bitmap.h\
+	../lib/config.h\
 	../lib/copyright.h\
 	../lib/debug.h\
 	../lib/hash.h\
@@ -275,6 +276,7 @@ THREAD_H = ../threads/alarm.h\
 
 THREAD_C = ../threads/alarm.cc\
 	../threads/kernel.cc\
+	../threads/mailbox.cc\
 	../threads/main.cc\
 	../threads/scheduler.cc\
 	../threads/synch.cc\

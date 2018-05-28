@@ -31,7 +31,7 @@
 
 Scheduler::Scheduler()
 { 
-    readyList = new List<Thread *>; 
+    readyList = new SortedList<Thread *>(Thread::Prior); 
     toBeDestroyed = NULL;
 } 
 
@@ -72,14 +72,17 @@ Scheduler::ReadyToRun (Thread *thread)
 //----------------------------------------------------------------------
 
 Thread *
-Scheduler::FindNextToRun ()
+Scheduler::FindNextToRun()
 {
     ASSERT(kernel->interrupt->getLevel() == IntOff);
 
-    if (readyList->IsEmpty()) {
-	return NULL;
-    } else {
-    	return readyList->RemoveFront();
+    if (readyList->IsEmpty() || Thread::Prior(kernel->currentThread, readyList->Front()) < 0)
+    {
+        return NULL;
+    }
+    else
+    {
+        return readyList->RemoveFront();
     }
 }
 

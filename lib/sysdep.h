@@ -17,6 +17,7 @@ using namespace std;
 #include "stdlib.h"
 #include "stdio.h"
 #include "string.h"
+#include "config.h"
 
 // Process control: abort, exit, and sleep
 extern void Abort();

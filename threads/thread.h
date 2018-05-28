@@ -1,9 +1,9 @@
-// thread.h 
+// thread.h
 //	Data structures for managing threads.  A thread represents
 //	sequential execution of code within a program.
 //	So the state of a thread includes the program counter,
 //	the processor registers, and the execution stack.
-//	
+//
 // 	Note that because we allocate a fixed size stack for each
 //	thread, it is possible to overflow the stack -- for instance,
 //	by recursing to too deep a level.  The most common reason
@@ -17,12 +17,12 @@
 //		void foo() { int *buf = new int[1000]; ...}
 //
 //
-// 	Bad things happen if you overflow the stack, and in the worst 
+// 	Bad things happen if you overflow the stack, and in the worst
 //	case, the problem may not be caught explicitly.  Instead,
 //	the only symptom may be bizarre segmentation faults.  (Of course,
 //	other problems can cause seg faults, so that isn't a sure sign
 //	that your thread stacks are too small.)
-//	
+//
 //	One thing to try if you find yourself with seg faults is to
 //	increase the size of thread stack -- ThreadStackSize.
 //
@@ -31,7 +31,7 @@
 //	Only then can we do the fork: "t->fork(f, arg)".
 //
 // Copyright (c) 1992-1996 The Regents of the University of California.
-// All rights reserved.  See copyright.h for copyright notice and limitation 
+// All rights reserved.  See copyright.h for copyright notice and limitation
 // of liability and disclaimer of warranty provisions.
 
 #ifndef THREAD_H
@@ -44,24 +44,33 @@
 #include "machine.h"
 #include "addrspace.h"
 
-// CPU register state to be saved on context switch.  
-// The x86 needs to save only a few registers, 
-// SPARC and MIPS needs to save 10 registers, 
+// CPU register state to be saved on context switch.
+// The x86 needs to save only a few registers,
+// SPARC and MIPS needs to save 10 registers,
 // the Snake needs 18,
 // and the RS6000 needs to save 75 (!)
 // For simplicity, I just take the maximum over all architectures.
 
-#define MachineStateSize 75 
+#define MachineStateSize 75
 
+//If a thread is not contained by any slots in Process Table,
+//its corresponding slot index will be invalid (-1).
+#define InvalidProessTableSlot -1
+//Also, its id, which indicates the slot index, will be invalid.
+#define InvalidThreadId InvalidProessTableSlot
 
 // Size of the thread's private execution stack.
 // WATCH OUT IF THIS ISN'T BIG ENOUGH!!!!!
-const int StackSize = (8 * 1024);	// in words
-
+const int StackSize = (8 * 1024); // in words
 
 // Thread state
-enum ThreadStatus { JUST_CREATED, RUNNING, READY, BLOCKED };
-
+enum ThreadStatus
+{
+  JUST_CREATED,
+  RUNNING,
+  READY,
+  BLOCKED
+};
 
 // The following class defines a "thread control block" -- which
 // represents a single thread of execution.
@@ -70,81 +79,151 @@ enum ThreadStatus { JUST_CREATED, RUNNING, READY, BLOCKED };
 //     an execution stack for activation records ("stackTop" and "stack")
 //     space to save CPU registers while not running ("machineState")
 //     a "status" (running/ready/blocked)
-//    
+//
 //  Some threads also belong to a user address space; threads
 //  that only run in the kernel have a NULL address space.
 
-class Thread {
-  private:
-    // NOTE: DO NOT CHANGE the order of these first two members.
-    // THEY MUST be in this position for SWITCH to work.
-    int *stackTop;			 // the current stack pointer
-    void *machineState[MachineStateSize];  // all registers except for stackTop
+class Thread
+{
+private:
+  // NOTE: DO NOT CHANGE the order of these first two members.
+  // THEY MUST be in this position for SWITCH to work.
+  int *stackTop;                        // the current stack pointer
+  void *machineState[MachineStateSize]; // all registers except for stackTop
 
-  public:
-    Thread(char* debugName);		// initialize a Thread 
-    ~Thread(); 				// deallocate a Thread
-					// NOTE -- thread being deleted
-					// must not be running when delete 
-					// is called
+public:
+  Thread(char *debugName, int threadPriority = 0); // initialize a Thread
+  ~Thread();                                       // deallocate a Thread
+                                                   // NOTE -- thread being deleted
+                                                   // must not be running when delete
+                                                   // is called
 
-    // basic thread operations
+  // basic thread operations
 
-    void Fork(VoidFunctionPtr func, void *arg); 
-    				// Make thread run (*func)(arg)
-    void Yield();  		// Relinquish the CPU if any 
-				// other thread is runnable
-    void Sleep(bool finishing); // Put the thread to sleep and 
-				// relinquish the processor
-    void Begin();		// Startup code for the thread	
-    void Finish();  		// The thread is done executing
-    
-    void CheckOverflow();   	// Check if thread stack has overflowed
-    void setStatus(ThreadStatus st) { status = st; }
-    char* getName() { return (name); }
-    void Print() { cout << name; }
-    void SelfTest();		// test whether thread impl is working
+  void Fork(VoidFunctionPtr func, void *arg);
+  // Make thread run (*func)(arg)
+  void Yield();               // Relinquish the CPU if any
+                              // other thread is runnable
+  void Sleep(bool finishing); // Put the thread to sleep and
+                              // relinquish the processor
+  void Begin();               // Startup code for the thread
+  void Finish();              // The thread is done executing
 
-  private:
-    // some of the private data for this class is listed above
-    
-    int *stack; 	 	// Bottom of the stack 
-				// NULL if this is the main thread
-				// (If NULL, don't deallocate stack)
-    ThreadStatus status;	// ready, running or blocked
-    char* name;
+  void CheckOverflow(); // Check if thread stack has overflowed
+  void setStatus(ThreadStatus st) { status = st; }
+  char *getName() { return (name); }
+  void Print() { cout << name; }
+  void SelfTest(); // test whether thread impl is working
 
-    void StackAllocate(VoidFunctionPtr func, void *arg);
-    				// Allocate a stack for thread.
-				// Used internally by Fork()
+private:
+  // some of the private data for this class is listed above
 
-// A thread running a user program actually has *two* sets of CPU registers -- 
-// one for its state while executing user code, one for its state 
-// while executing kernel code.
+  int *stack;          // Bottom of the stack
+                       // NULL if this is the main thread
+                       // (If NULL, don't deallocate stack)
+  ThreadStatus status; // ready, running or blocked
+  char *name;
 
-    int userRegisters[NumTotalRegs];	// user-level CPU register state
+  void StackAllocate(VoidFunctionPtr func, void *arg);
+  // Allocate a stack for thread.
+  // Used internally by Fork()
 
-  public:
-    void SaveUserState();		// save user-level register state
-    void RestoreUserState();		// restore user-level register state
+  // A thread running a user program actually has *two* sets of CPU registers --
+  // one for its state while executing user code, one for its state
+  // while executing kernel code.
 
-    AddrSpace *space;			// User code this thread is running.
+  int userRegisters[NumTotalRegs]; // user-level CPU register state
+
+public:
+  void SaveUserState();    // save user-level register state
+  void RestoreUserState(); // restore user-level register state
+
+  AddrSpace *space; // User code this thread is running.
+
+private:
+  int priority; //the greater the priority, the more important the thread
+  int id;       //also indicates the slot in the process table which contains it
+
+  int FetchEmptyTableSlot(); //find an empty slot in the process table
+                             //return -1 if the table is full
+                             //or the index of the empty slot
+                             //it will also put this thread into the table
+
+  void OnFinish(); //it will be called in Finish()
+
+public:
+  static int Prior(Thread *a, Thread *b); //if a is prior to b,
+                                          //the return value will be less than 0.
+
+  static Thread *processTable[ProcessTableSize];
+  static int ThreadNum();        //calculate the total number of threads in the process table
+  static bool IsValidId(int id); //check whether the id is valid
+
+  int GetId() { return id; }
+  int GetPriority() { return priority; }
+};
+
+#define MAILBOX_SIZE 32
+#define MAIL_SIZE 128
+#define TEXT_SIZE MAIL_SIZE - 5
+
+class ThreadMailbox
+{
+public:
+  ThreadMailbox(int size); //create a mailbox with size*MAIL_SIZE bytes
+  ~ThreadMailbox();
+
+  typedef struct Mail_tag
+  {
+    int senderId; //the id of the sending thread
+    char size;    //the real size of its text
+    char text[TEXT_SIZE];
+  } Mail;
+
+  bool Send(int recId, const char *msg, char size = 0); //send a size-byte message, blocking
+  bool Put(int recId, const char *msg, char size = 0);  //send a size-byte message, non-blocking
+  void Get(Mail *outMail);                              //get a mail from the box, blocking
+  bool Pick(Mail *outMail);                             //get a mail from the box, non-blocking
+
+  void Clear(); //clear all the mails sent to the current thread
+
+private:
+  List<Thread *> *waitReadList; //all the threads that want a potential mail
+                                //will be blocked and put here
+  Semaphore *waitWrite;         //if no empty slot, wait on this semaphore
+
+  typedef struct MailSlot_tag
+  {
+    int recieverId; //the id of the recieving thread
+    int senderId;   //the id of the sending thread
+    char size;      //the real size of its text; 0 means empty
+    char text[TEXT_SIZE];
+  } MailSlot; //the slot structure to store a mail
+
+  MailSlot *box; //an array really containing mails
+  const int boxSize;
+
+  void WriteMail(int slot, int recId, const char *msg, char size);
+  void ReadMail(int slot, Mail *outMail);
+  void AwakeReader(int id); //awake the waiting recieving thread of id id
+  void WaitMail();          //wait for a mail;
 };
 
 // external function, dummy routine whose sole job is to call Thread::Print
-extern void ThreadPrint(Thread *thread);	 
+extern void ThreadPrint(Thread *thread);
 
 // Magical machine-dependent routines, defined in switch.s
 
-extern "C" {
-// First frame on thread execution stack; 
-//   	call ThreadBegin
-//	call "func"
-//	(when func returns, if ever) call ThreadFinish()
-void ThreadRoot();
+extern "C"
+{
+  // First frame on thread execution stack;
+  //   	call ThreadBegin
+  //	call "func"
+  //	(when func returns, if ever) call ThreadFinish()
+  void ThreadRoot();
 
-// Stop running oldThread and start running newThread
-void SWITCH(Thread *oldThread, Thread *newThread);
+  // Stop running oldThread and start running newThread
+  void SWITCH(Thread *oldThread, Thread *newThread);
 }
 
 #endif // THREAD_H

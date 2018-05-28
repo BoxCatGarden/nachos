@@ -92,6 +92,7 @@ Kernel::Initialize()
     // object to save its state. 
     currentThread = new Thread("main");		
     currentThread->setStatus(RUNNING);
+    globalMailbox = new ThreadMailbox(MAILBOX_SIZE);
 
     stats = new Statistics();		// collect statistics
     interrupt = new Interrupt;		// start up interrupt handling
@@ -119,6 +120,7 @@ Kernel::Initialize()
 
 Kernel::~Kernel()
 {
+    delete globalMailbox;
     delete stats;
     delete interrupt;
     delete scheduler;
