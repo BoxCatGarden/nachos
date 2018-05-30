@@ -33,6 +33,8 @@ Scheduler::Scheduler()
 { 
     readyList = new List<Thread *>;
     toBeDestroyed = NULL;
+    lastSchedulingTick = 0;
+    lastDuration = 0; //not necessary, just for comfortable
 } 
 
 //----------------------------------------------------------------------
@@ -59,7 +61,7 @@ Scheduler::ReadyToRun (Thread *thread)
     ASSERT(kernel->interrupt->getLevel() == IntOff);
     DEBUG(dbgThread, "Putting thread on ready list: " << thread->getName());
 
-    thread->waitTick = lastSchedulingTick - kernel->stats->totalTicks; //reset waitTick
+    thread->waitTick += lastSchedulingTick - kernel->stats->totalTicks; //complete waitTick
 
     thread->setStatus(READY);
     readyList->Append(thread);
@@ -100,8 +102,9 @@ Scheduler::FindNextToRun()
  * Calculate and set the weight of every threads in ready list.
  * Return the one with maximum weight.
  * 
- * Note: waitTick of any threads in readyList will add a
- * duration.
+ * Note: waitTick of any threads in readyList will be added
+ * lastDuration. And it will call CalculateWeight() on each
+ * thread in readyList.
 -------------------------------------------------------------*/
 Thread *Scheduler::CalculateMaxWeightThread()
 {
@@ -126,7 +129,7 @@ Thread *Scheduler::CalculateMaxWeightThread()
  * Calculate and set the weight of a thread.
  * Return the weight.
  * 
- * Note: weight of thread t will refresh.
+ * Note: the weight of thread t will be re-calculated.
 -------------------------------------------------------------*/
 int Scheduler::CalculateWeight(Thread *t)
 {
