@@ -45,7 +45,7 @@ ThreadMailbox::~ThreadMailbox()
 bool ThreadMailbox::Send(int recId, const char *msg, char size)
 {
     if (size < 1)
-        size = min(strlen(msg) + 1, TEXT_SIZE);
+        size = min((int)(strlen(msg) + 1), TEXT_SIZE);
 
     Interrupt *interrupt = kernel->interrupt;
     IntStatus oldLevel = interrupt->SetLevel(IntOff); //turn off the interrupt
@@ -79,7 +79,7 @@ bool ThreadMailbox::Send(int recId, const char *msg, char size)
 bool ThreadMailbox::Put(int recId, const char *msg, char size)
 {
     if (size < 1)
-        size = min(strlen(msg) + 1, TEXT_SIZE);
+        size = min((int)(strlen(msg) + 1), TEXT_SIZE);
 
     Interrupt *interrupt = kernel->interrupt;
     IntStatus oldLevel = interrupt->SetLevel(IntOff); //turn off the interrupt

@@ -165,6 +165,10 @@ public:
 #define MAIL_SIZE 128
 #define TEXT_SIZE MAIL_SIZE - 5
 
+template <class T>
+class List;
+class Semaphore;
+
 class ThreadMailbox
 {
 public:

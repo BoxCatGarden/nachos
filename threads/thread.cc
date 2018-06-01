@@ -50,9 +50,7 @@ Thread::Thread(char *threadName)
     weight = 0;
     runTick = 0;
     waitTick = 0;
-    IntStatus oldLevel = kernel->interrupt->SetLevel(IntOff);
     id = FetchEmptyTableSlot();
-    kernel->interrupt->SetLevel(oldLevel);
 }
 
 //----------------------------------------------------------------------
@@ -484,8 +482,6 @@ bool Thread::IsValidId(int id)
 ------------------------------------------------------*/
 int Thread::FetchEmptyTableSlot()
 {
-    ASSERT(kernel->interrupt->getLevel() == IntOff);
-
     for (int i = 0; i < ProcessTableSize; ++i)
     {
         if (!processTable[i])

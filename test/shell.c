@@ -15,8 +15,8 @@ int main()
     {
         Write(prompt, 2, output);
 
-        if (i = Read(buffer, 59, input))
-            --i;
+        Read(buffer, 60, input);
+        for (i = 0; buffer[i] != '\n' && i < 59; ++i);
         
 //Write(&ch, 1, output);
 

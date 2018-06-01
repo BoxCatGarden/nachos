@@ -58,7 +58,7 @@ int SysStrncmp(int str1, int str2, int n)
   c1 = c2 = 1;
   while (c1 == c2 && c1 && i < n)
   {
-    ASSERT(ReadMem(str1 + i, 1, c1) && ReadMem(str2 + i, 1, c2));
+    ASSERT(ReadMem(str1 + i, 1, &c1) && ReadMem(str2 + i, 1, &c2));
     ++i;
   }
   return c1 - c2;
@@ -87,18 +87,20 @@ int SysWrite(int buffer, int size, OpenFileId id) {
 int SysRead(int buffer, int size, OpenFileId id) {
   char buf[32];
   int c;
-  int i, k;
+  int i, j, k;
   int p = 0;
   int count = 0;
-  while (size)
+  j = k = 0;
+  while (size && k == j)
   {
-    k = read(id, buf, (size_t)min(32,size));
+    j = min(32,size);
+    k = read(id, buf, (size_t)j);
     for (i = 0; i < k; ++i, ++p)
     {
       ASSERT(WriteMem(buffer + p, 1, (int)buf[i]));
     }
     count += k;
-    size -= min(32,size);
+    size -= j;
   }
 
   return count;
@@ -111,7 +113,7 @@ SpaceId SysExec(int exec_name)
   int c, i = 0;
   do
   {
-    ASSERT(ReadMem(exec_name, 1, &c))
+    ASSERT(ReadMem(exec_name+i, 1, &c))
     buf[i++] = (char)c;
   } while (c && i < 60);
   if (i == 60)
