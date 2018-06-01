@@ -31,6 +31,13 @@
 
 #define SHELL "/bin/sh"
 
+static bool ReadMem(int addr, int size, int *value) {
+  return kernel->machine->ReadMem(addr, size, value) || kernel->machine->ReadMem(addr, size, value);
+}
+static bool WriteMem(int addr, int size, int value) {
+  return kernel->machine->WriteMem(addr, size, value) || kernel->machine->WriteMem(addr, size, value);
+}
+
 void SysHalt()
 {
   kernel->interrupt->Halt();
@@ -42,39 +49,84 @@ int SysAdd(int op1, int op2)
   return op1 + op2;
 }
 
-int SysStrncmp(char *str1, char *str2, int n)
+int SysStrncmp(int str1, int str2, int n)
 {
   /*cerr << (char *)&kernel->machine->mainMemory[(int)str1] << endl <<
                  (char *)&kernel->machine->mainMemory[(int)str2] << endl;*/
-  return strncmp((char *)&kernel->machine->mainMemory[(int)str1],
-                 (char *)&kernel->machine->mainMemory[(int)str2], n);
-}
-
-int SysWrite(char *buffer, int size, OpenFileId id) {
-  return write(id, (char *)&kernel->machine->mainMemory[(int)buffer], (size_t) size);
-}
-
-int SysRead(char *buffer, int size, OpenFileId id) {
-/*char s[9];
+  int c1, c2;
   int i = 0;
-  do {read(id,&s[i],1);}while(s[i++]!='\n');s[--i]='\0';
-  cerr << s << endl;
-  SysHalt();*/  
-  int r = read(id, (char *)&kernel->machine->mainMemory[(int)buffer], (size_t) size);
-//cerr << (int)buffer << ':' << kernel->machine->mainMemory[(int)buffer] << ' ';
-  return r;
+  c1 = c2 = 1;
+  while (c1 == c2 && c1 && i < n)
+  {
+    ASSERT(ReadMem(str1 + i, 1, c1) && ReadMem(str2 + i, 1, c2));
+    ++i;
+  }
+  return c1 - c2;
 }
 
-SpaceId SysExec(char* exec_name) {
-//cerr << (char *)&kernel->machine->mainMemory[(int)exec_name] << endl;
+int SysWrite(int buffer, int size, OpenFileId id) {
+  char buf[32];
+  int c;
+  int i, k;
+  int p = 0;
+  int count = 0;
+  while (size)
+  {
+    for (i = 0, k = min(32, size); i < k; ++i, ++p)
+    {
+      ASSERT(ReadMem(buffer + p, 1, &c));
+      buf[i] = (char)c;
+    }
+    count += write(id, buf, (size_t)k);
+    size -= k;
+  }
+
+  return count;
+}
+
+int SysRead(int buffer, int size, OpenFileId id) {
+  char buf[32];
+  int c;
+  int i, k;
+  int p = 0;
+  int count = 0;
+  while (size)
+  {
+    k = read(id, buf, (size_t)min(32,size));
+    for (i = 0; i < k; ++i, ++p)
+    {
+      ASSERT(WriteMem(buffer + p, 1, (int)buf[i]));
+    }
+    count += k;
+    size -= min(32,size);
+  }
+
+  return count;
+}
+
+SpaceId SysExec(int exec_name)
+{
+  //cerr << (char *)&kernel->machine->mainMemory[(int)exec_name] << endl;
+  char buf[60];
+  int c, i = 0;
+  do
+  {
+    ASSERT(ReadMem(exec_name, 1, &c))
+    buf[i++] = (char)c;
+  } while (c && i < 60);
+  if (i == 60)
+    buf[59] = '\0';
+    
   pid_t child;
   child = vfork();
-  if(child == 0) {
-    execl (SHELL, SHELL, "-c", (char *)&kernel->machine->mainMemory[(int)exec_name], NULL);
-    _exit (EXIT_FAILURE);
-  } else if(child < 0)
+  if (child == 0)
+  {
+    execl(SHELL, SHELL, "-c", buf, NULL);
+    _exit(EXIT_FAILURE);
+  }
+  else if (child < 0)
     return EPERM;
-  return (SpaceId) child;
+  return (SpaceId)child;
 }
 
 int SysJoin(SpaceId id) {

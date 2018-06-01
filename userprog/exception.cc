@@ -110,38 +110,38 @@ void ExceptionHandler(ExceptionType which)
 		case SC_Strncmp:
 			DEBUG(dbgSys, "Strncmp str1:" << (int)kernel->machine->ReadRegister(4) << " str2:" << (int)kernel->machine->ReadRegister(5)
 										  << " len:" << (int)kernel->machine->ReadRegister(6) << "\n");
-			result = SysStrncmp((char *)kernel->machine->ReadRegister(4),
-									(char *)kernel->machine->ReadRegister(5),
-									(int)kernel->machine->ReadRegister(6));
+			result = SysStrncmp(kernel->machine->ReadRegister(4),
+									kernel->machine->ReadRegister(5),
+									kernel->machine->ReadRegister(6));
 			
 			kernel->machine->WriteRegister(2, (int)result);
 			MovePC();
 			return;
 
 		case SC_Write:
-			result = SysWrite((char *)kernel->machine->ReadRegister(4),
-								  (int)kernel->machine->ReadRegister(5),
+			result = SysWrite(kernel->machine->ReadRegister(4),
+								  kernel->machine->ReadRegister(5),
 								  (OpenFileId)kernel->machine->ReadRegister(6));
 			kernel->machine->WriteRegister(2, (int)result);
 			MovePC();
 			return;
 
 		case SC_Read:
-			result = SysRead((char *)kernel->machine->ReadRegister(4),
-								 (int)kernel->machine->ReadRegister(5),
+			result = SysRead(kernel->machine->ReadRegister(4),
+								 kernel->machine->ReadRegister(5),
 								 (OpenFileId)kernel->machine->ReadRegister(6));
 			kernel->machine->WriteRegister(2, (int)result);
 			MovePC();
 			return;
 
 		case SC_Exec:
-			result = SysExec((char *)kernel->machine->ReadRegister(4));
+			result = SysExec(kernel->machine->ReadRegister(4));
 			kernel->machine->WriteRegister(2, (int)result);
 			MovePC();
 			return;
 
 		case SC_Join:
-			result = SysJoin((int)kernel->machine->ReadRegister(4));
+			result = SysJoin((SpaceId)kernel->machine->ReadRegister(4));
 			kernel->machine->WriteRegister(2, (int)result);
 			MovePC();
 			return;

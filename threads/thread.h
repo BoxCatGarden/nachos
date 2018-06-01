@@ -150,7 +150,7 @@ private:
   void OnFinish(); //it will be called in Finish()
 
 public:
-  int weight; //priority; the greater the weight, the more important the thread
+  int weight; //dynamic priority; the greater the weight, the more important the thread
   int runTick; //the ticks for running
   int waitTick; //the ticks for waiting in the ready list
 

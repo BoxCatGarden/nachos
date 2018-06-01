@@ -34,7 +34,7 @@ Scheduler::Scheduler()
     readyList = new List<Thread *>;
     toBeDestroyed = NULL;
     lastSchedulingTick = 0;
-    lastDuration = 0; //not necessary, just for comfortable
+    lastDuration = 0; //not necessary, just for comfort
 } 
 
 //----------------------------------------------------------------------

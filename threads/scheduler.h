@@ -41,6 +41,7 @@ class Scheduler {
     				// by the next thread that runs
     int lastSchedulingTick; //the total ticks of the system when the last scheduling happens
     int lastDuration; //used to store the last duration between the latest two schedulings
+    
     Thread* CalculateMaxWeightThread();
     int CalculateWeight(Thread* t); //calculate the weight of thread t
 };
