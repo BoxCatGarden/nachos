@@ -452,14 +452,14 @@ void Thread::SelfTest()
 }
 
 //thread upgrade
-Thread *Thread::processTable[ProcessTableSize] = {NULL};
+Thread *Thread::processTable[Config_ProcessTableSize] = {NULL};
 
 //static
 int Thread::ThreadNum()
 {
     int n = 0;
     IntStatus oldLevel = kernel->interrupt->SetLevel(IntOff);
-    for (int i = 0; i < ProcessTableSize; ++i)
+    for (int i = 0; i < Config_ProcessTableSize; ++i)
     {
         if (processTable[i])
             ++n;
@@ -473,7 +473,7 @@ int Thread::ThreadNum()
 bool Thread::IsValidId(int id)
 {
     ASSERT(kernel->interrupt->getLevel() == IntOff);
-    return 0 <= id && id < ProcessTableSize && processTable[id];
+    return 0 <= id && id < Config_ProcessTableSize && processTable[id];
 }
 /*------------------------------------------------------
  * Fetch an empty slot in Process Table for this thread.
@@ -482,7 +482,7 @@ bool Thread::IsValidId(int id)
 ------------------------------------------------------*/
 int Thread::FetchEmptyTableSlot()
 {
-    for (int i = 0; i < ProcessTableSize; ++i)
+    for (int i = 0; i < Config_ProcessTableSize; ++i)
     {
         if (!processTable[i])
         {

@@ -8,6 +8,6 @@
 #define NACHOS_5AA5DV23ZVBDOH_CONFIG_H
 
 //for threads
-#define ProcessTableSize 128
+#define Config_ProcessTableSize 128
 
 #endif

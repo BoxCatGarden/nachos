@@ -156,7 +156,7 @@ public:
 
   int GetId() { return id; }
   
-  static Thread *processTable[ProcessTableSize];
+  static Thread *processTable[Config_ProcessTableSize];
   static int ThreadNum();        //calculate the total number of threads in the process table
   static bool IsValidId(int id); //check whether the id is valid
 };
