@@ -11,6 +11,6 @@
 #define Config_ProcessTableSize 128
 
 //for memory
-#define Config_VirtualMemFile "swap"
+#define Config_VirtualMemFile "progvm"
 
 #endif

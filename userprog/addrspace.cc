@@ -137,6 +137,7 @@ bool AddrSpace::Load(char *fileName)
 
     // allocate virtual memory
     pageTable = kernel->memory->StartVirLoad(numPages);
+    //cout << "start load" << endl;
     if (!pageTable)
     {
         cout << "Virtual memory has been exhausted" << endl;
@@ -151,6 +152,7 @@ bool AddrSpace::Load(char *fileName)
         kernel->memory->VirLoad(pageTable, noffH.code.virtualAddr,
                 executable, noffH.code.size, noffH.code.inFileAddr);
     }
+    //cout << "load code" << endl;
     if (noffH.initData.size > 0)
     {
         DEBUG(dbgAddr, "Initializing data segment.");
@@ -188,7 +190,7 @@ void AddrSpace::Execute()
     kernel->currentThread->space = this;
     ++counter;
 
-    kernel->memory->Load(0, pageTable, min(8, numPages));
+    kernel->memory->Load(0, pageTable, min(8, (int)numPages));
     this->InitRegisters(); // set the initial register values
     this->RestoreState();  // load page table register
 

@@ -56,7 +56,7 @@ void Memory::Free(int pageFrame) {
 /* Load process pages into physical memory
  * Return the number of successful loading 
  * Replacement, if necessary, happens here */
-int Memory::Load(int startPrcPage, int *prcPT, int num = 1) {
+int Memory::Load(int startPrcPage, int *prcPT, int num) {
     int i;
     for (i = 0; i < num && i < NumPhysPages; ++i) {
         int j = FindFreeFrame();
