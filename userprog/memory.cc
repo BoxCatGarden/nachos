@@ -213,6 +213,7 @@ void Memory::VirLoad(int *prcPT, int prcAddr,
             loaded = numBytes;
         }
     }
+    delete[] page4;
 }
 
 void Memory::WriteVirMem(char *buf, int size, int position) {
