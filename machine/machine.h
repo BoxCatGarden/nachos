@@ -113,7 +113,7 @@ class Machine {
 
     char *mainMemory;		// physical memory to store user program,
 				// code and data, while executing
-
+	
 // NOTE: the hardware translation of virtual addresses in the user program
 // to physical addresses (relative to the beginning of "mainMemory")
 // can be controlled by one of:
@@ -137,6 +137,7 @@ class Machine {
 
     TranslationEntry *pageTable;
     unsigned int pageTableSize;
+	int *processPageTable;
 
     bool ReadMem(int addr, int size, int* value);
     bool WriteMem(int addr, int size, int value);

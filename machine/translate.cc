@@ -92,10 +92,15 @@ bool Machine::ReadMem(int addr, int size, int *value)
 	DEBUG(dbgAddr, "Reading VA " << addr << ", size " << size);
 
 	exception = Translate(addr, &physicalAddress, size, FALSE);
-	if (exception != NoException)
-	{
+	if (exception != NoException) {
 		RaiseException(exception, addr);
-		return FALSE;
+		if (exception == PageFaultException) { //try again for page fault
+			exception = Translate(addr, &physicalAddress, size, FALSE);
+			if (exception != NoException) {
+				RaiseException(exception, addr);
+				return FALSE;
+			}
+		} else return FALSE;
 	}
 	switch (size)
 	{
@@ -143,10 +148,15 @@ bool Machine::WriteMem(int addr, int size, int value)
 	DEBUG(dbgAddr, "Writing VA " << addr << ", size " << size << ", value " << value);
 
 	exception = Translate(addr, &physicalAddress, size, TRUE);
-	if (exception != NoException)
-	{
+	if (exception != NoException) {
 		RaiseException(exception, addr);
-		return FALSE;
+		if (exception == PageFaultException) {
+			exception = Translate(addr, &physicalAddress, size, TRUE);
+			if (exception != NoException) {
+				RaiseException(exception, addr);
+				return FALSE;
+			}
+		} else return FALSE;
 	}
 	switch (size)
 	{
@@ -198,7 +208,7 @@ ExceptionType
 Machine::Translate(int virtAddr, int *physAddr, int size, bool writing)
 {
 	int i;
-	unsigned int vpn, offset;
+	unsigned int prcpn, vpn, offset;
 	TranslationEntry *entry;
 	unsigned int pageFrame;
 
@@ -217,25 +227,34 @@ Machine::Translate(int virtAddr, int *physAddr, int size, bool writing)
 
 	// calculate the virtual page number, and offset within the page,
 	// from the virtual address
-	vpn = (unsigned)virtAddr / PageSize;
+	prcpn = (unsigned)virtAddr / PageSize;
 	offset = (unsigned)virtAddr % PageSize;
 
 	if (tlb == NULL)
 	{ // => page table => vpn is index into table
-		if (vpn >= pageTableSize)
+		if (prcpn >= pageTableSize)
 		{
 			DEBUG(dbgAddr, "Illegal virtual page # " << virtAddr);
 			return AddressErrorException;
 		}
-		else if (!pageTable[vpn].valid)
-		{
-			DEBUG(dbgAddr, "Invalid virtual page # " << virtAddr);
-			return PageFaultException;
+		else {
+			vpn = processPageTable[prcpn];
+			if (vpn >= NumVirtPages)
+			{
+				DEBUG(dbgAddr, "Illegal page " << vpn);
+				return BusErrorException;
+			} 
+			else if (!pageTable[vpn].valid)
+			{
+				DEBUG(dbgAddr, "Invalid virtual page # " << virtAddr);
+				return PageFaultException;
+			}
 		}
 		entry = &pageTable[vpn];
 	}
 	else
 	{
+		vpn = processPageTable[prcpn];
 		for (entry = NULL, i = 0; i < TLBSize; i++)
 			if (tlb[i].valid && (tlb[i].virtualPage == ((int)vpn)))
 			{

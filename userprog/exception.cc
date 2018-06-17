@@ -62,6 +62,7 @@ void ExceptionHandler(ExceptionType which)
 {
 	int type = kernel->machine->ReadRegister(2);
 	int result;
+	int badAddr = kernel->machine->ReadRegister(BadVAddrReg);
 
 	DEBUG(dbgSys, "Received Exception " << which << " type: " << type << "\n");
 
@@ -111,25 +112,25 @@ void ExceptionHandler(ExceptionType which)
 			DEBUG(dbgSys, "Strncmp str1:" << (int)kernel->machine->ReadRegister(4) << " str2:" << (int)kernel->machine->ReadRegister(5)
 										  << " len:" << (int)kernel->machine->ReadRegister(6) << "\n");
 			result = SysStrncmp(kernel->machine->ReadRegister(4),
-									kernel->machine->ReadRegister(5),
-									kernel->machine->ReadRegister(6));
-			
+								kernel->machine->ReadRegister(5),
+								kernel->machine->ReadRegister(6));
+
 			kernel->machine->WriteRegister(2, (int)result);
 			MovePC();
 			return;
 
 		case SC_Write:
 			result = SysWrite(kernel->machine->ReadRegister(4),
-								  kernel->machine->ReadRegister(5),
-								  (OpenFileId)kernel->machine->ReadRegister(6));
+							  kernel->machine->ReadRegister(5),
+							  (OpenFileId)kernel->machine->ReadRegister(6));
 			kernel->machine->WriteRegister(2, (int)result);
 			MovePC();
 			return;
 
 		case SC_Read:
 			result = SysRead(kernel->machine->ReadRegister(4),
-								 kernel->machine->ReadRegister(5),
-								 (OpenFileId)kernel->machine->ReadRegister(6));
+							 kernel->machine->ReadRegister(5),
+							 (OpenFileId)kernel->machine->ReadRegister(6));
 			kernel->machine->WriteRegister(2, (int)result);
 			MovePC();
 			return;
@@ -151,6 +152,13 @@ void ExceptionHandler(ExceptionType which)
 			break;
 		}
 		break;
+
+	case PageFaultException:
+		if (kernel->memory->Load(badAddr/PageSize,
+				kernel->machine->processPageTable))
+			return;
+		break;
+
 	default:
 		cerr << "Unexpected user mode exception" << (int)which << "\n";
 		break;

@@ -110,6 +110,8 @@ Kernel::Initialize()
     postOfficeIn = new PostOfficeInput(10);
     postOfficeOut = new PostOfficeOutput(reliability);
 
+    memory = new Memory(Config_VirtualMemFile); //memory management component
+
     interrupt->Enable();
 }
 
@@ -120,6 +122,7 @@ Kernel::Initialize()
 
 Kernel::~Kernel()
 {
+    delete memory;
     delete globalMailbox;
     delete stats;
     delete interrupt;

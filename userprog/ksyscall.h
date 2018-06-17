@@ -32,10 +32,10 @@
 #define SHELL "/bin/sh"
 
 static bool ReadMem(int addr, int size, int *value) {
-  return kernel->machine->ReadMem(addr, size, value) || kernel->machine->ReadMem(addr, size, value);
+  return kernel->machine->ReadMem(addr, size, value);
 }
 static bool WriteMem(int addr, int size, int value) {
-  return kernel->machine->WriteMem(addr, size, value) || kernel->machine->WriteMem(addr, size, value);
+  return kernel->machine->WriteMem(addr, size, value);
 }
 
 void SysHalt()

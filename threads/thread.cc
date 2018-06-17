@@ -75,6 +75,8 @@ Thread::~Thread()
 
     if (id != InvalidProessTableSlot)
         processTable[id] = NULL;
+
+    if (space) delete space;
 }
 
 //----------------------------------------------------------------------

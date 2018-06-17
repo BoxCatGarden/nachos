@@ -10,4 +10,7 @@
 //for threads
 #define Config_ProcessTableSize 128
 
+//for memory
+#define Config_VirtualMemFile "swap"
+
 #endif
